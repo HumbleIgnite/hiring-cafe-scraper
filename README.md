@@ -1,208 +1,151 @@
-[Hiring Cafe Scraper](https://apify.com/crawlerbros/hiring-cafe-scraper?fpr=data)
+[Hiring Cafe Scraper](https://apify.com/abotapi/hiring-cafe-scraper?fpr=data)
 
-Extract global job postings from **hiring.cafe** — an AI-powered job aggregator that indexes 2.9+ million listings from Greenhouse, Lever, Workable, Workday, SuccessFactors, Hirebridge, BambooHR, and 14,000+ direct company career pages. Returns **32 structured fields** per job including title, company, workplace type, seniority, salary (when disclosed), geolocation, required technical tools, company industries, and a direct apply URL.
+# Hiring.Cafe Jobs Scraper
 
-## Features
+Extract structured job listings from Hiring.Cafe at scale. 100+ fields per job including salary, company funding data, benefits, certifications, and geo coordinates.
 
-- **32 output fields** per job — complete flat schema with typed defaults (zero nulls)
-- **Direct apply URLs** — every job links back to the original ATS posting
-- **Rich metadata** — workplace type (Remote/Hybrid/Onsite), seniority, commitment, category, required technical tools, min years experience, salary range when disclosed
-- **Geolocation** — latitude/longitude per listing
-- **Company enrichment** — hiring company name, website, industries, HQ country, employee count bucket
-- **Filter support** — keyword search, workplace type, seniority level, commitment type, date range
-- **Hardcoded RESIDENTIAL US proxy** — required to bypass Cloudflare Managed Challenge
-- **Automatic Cloudflare bypass** — Patchright Chromium session with session rotation (typically solves in 8–20 seconds)
+## Why This Scraper?
 
-## Input
+**Fast.** Each API call returns ~150 jobs. Scrape 500 jobs in under 30 seconds, 1,000 jobs in under a minute (after initial Cloudflare solve). Results are pushed incrementally so you can start processing before the run finishes.
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `searchQueries` | Array of strings | Keywords to search on hiring.cafe (e.g., `"software engineer"`, `"data scientist"`). Empty array returns unfiltered results. |
-| `locations` | Array | Filter to jobs in these locations. Plain strings like `["San Francisco","London"]` or full `{label, value, countryCode, lat, lng}` dicts. |
-| `workplaceTypes` | Array | Filter by workplace type: `Remote`, `Hybrid`, `Onsite` (default: all three) |
-| `seniorityLevels` | Array | `No Prior Experience Required`, `Entry Level`, `Mid Level`, `Senior Level`, `Director`, `Executive` (default: all six) |
-| `commitmentTypes` | Array | `Full Time`, `Part Time`, `Contract`, `Internship`, `Temporary`, `Seasonal`, `Volunteer` (default: all seven) |
-| `dateFetchedPastNDays` | Integer | Only include jobs fetched within the last N days (default 30, max 365) |
-| `maxItems` | Integer | Maximum jobs to return across all queries (default 50, max 1000) |
-| `jobTitleQuery` | String | Filter to jobs whose **title** contains this phrase. |
-| `jobDescriptionQuery` | String | Filter to jobs whose **description** contains this phrase. |
-| `technologyKeywordsQuery` | String | Match against parsed tech-stack tags (e.g. `python`, `react`). |
-| `requirementsKeywordsQuery` | String | Match against parsed requirement bullets. |
-| `companyNames` | Array | Whitelist — only jobs from these companies. |
-| `excludedCompanyNames` | Array | Blacklist — exclude jobs from these companies. |
-| `companyKeywords` | Array | Substring-match the company name (whitelist). |
-| `excludedCompanyKeywords` | Array | Substring-match (blacklist). |
-| `industries` | Array | Limit to companies in these industries. |
-| `excludedIndustries` | Array | Exclude companies in these industries. |
-| `salaryCurrency` | Select | `USD` / `EUR` / `GBP` / `CAD` / `AUD` / `INR` / `JPY` / `CNY` / `MXN` / `BRL` (or empty for any). |
-| `salaryFrequency` | Select | `Yearly` / `Monthly` / `Weekly` / `Daily` / `Hourly`. |
-| `minSalary` | Integer | Lower bound for compensation, in the chosen currency + frequency. |
-| `maxSalary` | Integer | Upper bound for compensation. |
-| `onlyTransparentSalaries` | Boolean | Drop jobs that don't publish a salary range (default false). |
-| `minYearsExperience` | Integer | Filter to jobs requiring at least this many years (default 0). |
-| `maxYearsExperience` | Integer | Filter to jobs requiring at most this many years (default 20). |
-| `securityClearances` | Array | `None`, `Confidential`, `Secret`, `Top Secret`, `Top Secret/SCI`, `Public Trust`, `Interim Clearances`, `Other`. |
-| `sortBy` | Select | `default` (relevance) / `newest` / `oldest` / `salary_high_to_low` / `salary_low_to_high`. |
+**More Filters.** Employment type, seniority level, salary transparency, and date range filters that no other Hiring.Cafe scraper on Apify offers.
 
-### Example Input
+**Direct Job URLs.** Paste `/viewjob/` links alongside search URLs to scrape individual listings with full data.
+
+**Total Count.** Shows how many jobs match your search before scraping begins.
+
+## How It Works
+
+### Option 1: Search by URL
+
+Paste one or more search URLs from hiring.cafe. Go to [hiring.cafe](https://hiring.cafe), apply your filters, then copy the URL from the address bar.
+
+You can also paste direct job URLs (`/viewjob/...`) to scrape individual listings.
+
+### Option 2: Search by Filters
+
+Use keyword, location, and advanced filters without building URLs.
 
 ```
 {
-    "searchQueries": ["software engineer", "data scientist"],
-    "workplaceTypes": ["Remote", "Hybrid"],
-    "seniorityLevels": ["Mid Level", "Senior Level"],
-    "commitmentTypes": ["Full Time"],
-    "dateFetchedPastNDays": 7,
-    "maxItems": 100
+  "keyword": "python developer",
+  "location": "United States",
+  "workplaceType": "Remote",
+  "commitmentType": "Full Time",
+  "seniorityLevel": "Senior Level",
+  "salaryTransparentOnly": true,
+  "maxItems": 500
 }
 ```
 
-Minimal input (just a keyword):
+## Filter Options
+
+| Filter | Options | Default | Competitors |
+| --- | --- | --- | --- |
+| Keyword | Any text | (empty) | All have |
+| Location | Country or city | (worldwide) | All have |
+| Workplace Type | Remote, Hybrid, Onsite, Any | Any | All have |
+| **Employment Type** | Full Time, Part Time, Contract, Internship, Any | Any | **Only us** |
+| **Seniority Level** | Entry, Mid, Senior, No Experience, Any | Any | **Only us** |
+| **Posted Within** | 1 to 365 days | 30 | **Only us** |
+| **Salary Transparent** | true or false | false | **Only us** |
+
+> **Note:** Hiring.Cafe uses relevance based search. Keyword and employment type are hard filters. Workplace type and seniority level influence ranking but are soft filters. For precise filtering, use URL mode with a hiring.cafe URL where you applied filters directly on the website.
+
+## Output Structure (100+ fields)
+
+Output preserves the native Hiring.Cafe nested format, fully compatible with other Hiring.Cafe scrapers on Apify.
+
+### Top Level Fields
+
+`id`, `board_token`, `source`, `apply_url`, `job_url`, `requisition_id`, `is_expired`
+
+### Job Info
+
+`title`, `job_title_raw`, `description` (full HTML)
+
+### Job Details (91 fields)
+
+| Category | Sample Fields |
+| --- | --- |
+| Title and Summary | core_job_title, requirements_summary, job_category |
+| Skills | technical_tools[], licenses_or_certifications[] |
+| Education | bachelors, masters, doctorate degree requirement, fields_of_study[] |
+| Experience | min_industry_and_role_yoe, min_management_and_leadership_yoe |
+| Employment | commitment[], role_type, seniority_level, workplace_type |
+| Location | formatted_workplace_location, workplace_cities, states, countries[] |
+| Compensation | yearly, monthly, weekly, hourly min and max compensation, currency |
+| Benefits | visa_sponsorship, 401k_matching, four_day_work_week, retirement_plan |
+| Work Conditions | physical_labor_intensity, travel_requirement, shift_work |
+| Languages | language_requirements[], num_language_requirements |
+
+### v5_processed_company_data (19 fields)
+
+`name`, `homepage_uri`, `industries[]`, `nb_employees`, `year_founded`, `hq_country`, `organization_type`, `latest_funding_type`, `latest_funding_amount`, `investors[]`, `stock_exchange`, `stock_symbol`
+
+### Geoloc
+
+`lat`, `lon`
+
+## Example Output
 
 ```
 {
-    "searchQueries": ["nurse"],
-    "maxItems": 20
+  "id": "lever___example___12345",
+  "source": "lever",
+  "board_token": "example",
+  "apply_url": "https://jobs.lever.co/example/12345",
+  "job_url": "https://hiring.cafe/viewjob/abc123xyz",
+  "is_expired": false,
+  "job_information": {
+    "title": "Backend Engineer",
+    "description": "<p>Job description HTML content...</p>"
+  },
+  "v5_processed_job_data": {
+    "core_job_title": "Backend Engineer",
+    "commitment": ["Full Time"],
+    "seniority_level": "Mid Level",
+    "workplace_type": "Remote",
+    "formatted_workplace_location": "New York, New York, United States",
+    "yearly_min_compensation": 120000,
+    "yearly_max_compensation": 160000,
+    "listed_compensation_currency": "USD",
+    "is_compensation_transparent": true,
+    "technical_tools": ["Node.js", "PostgreSQL", "AWS"],
+    "visa_sponsorship": false,
+    "company_name": "Example Inc"
+  },
+  "v5_processed_company_data": {
+    "name": "Example Inc",
+    "nb_employees": 200,
+    "year_founded": 2018,
+    "hq_country": "US",
+    "organization_type": "Private",
+    "latest_funding_type": "Series A",
+    "latest_funding_amount": 15000000
+  },
+  "_geoloc": [{"lat": 40.7128, "lon": -74.006}]
 }
 ```
 
-## Output
+## Input Options
 
-Each job has **32 fields**. Every field is always present with a typed default (empty string, zero, empty list, or `false`) — **never `null`**.
-
-### Identity
-
-| Field | Type | Description |
+| Field | Description | Default |
 | --- | --- | --- |
-| `id` | String | Unique job ID |
-| `objectID` | String | Search index object ID |
-| `source` | String | Source ATS (`greenhouse`, `lever`, `workable`, `successfactors`, `hirebridge`, ...) |
-| `boardToken` | String | Job board token on that ATS |
-| `applyUrl` | String | Direct apply URL (redirects to original source) |
-| `title` | String | Job title |
-| `description` | String | Job description (HTML stripped, truncated to 2,000 chars) |
-| `isExpired` | Boolean | Whether the listing is expired |
+| Start URLs | Search URLs or job URLs from hiring.cafe |  |
+| Keyword | Job title, skills, or company name |  |
+| Location | Country or city | (worldwide) |
+| Workplace Type | Remote, Hybrid, Onsite, Any | Any |
+| Employment Type | Full Time, Part Time, Contract, Internship, Any | Any |
+| Seniority Level | Entry, Mid, Senior, Any | Any |
+| Posted Within | Days since posted (1 to 365) | 30 |
+| Salary Transparent | Only jobs with disclosed salary | false |
+| Max Jobs | Maximum listings to scrape | 1000 |
 
-### Classification
+## Tips
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `coreJobTitle` | String | Canonicalized core job title |
-| `category` | String | Job category (e.g., `Engineering`, `Data and Analytics`, `Marketing`) |
-| `seniorityLevel` | String | Comma-joined seniority tags (e.g., `"Mid Level"`, `"Senior Level"`) |
-| `roleType` | String | `Individual Contributor` or `People Manager` |
-| `commitment` | String | Commitment type (e.g., `"Full Time"`) |
-| `workplaceType` | String | `Remote`, `Hybrid`, or `Onsite` |
+The total count shows before scraping so you know the search size upfront.
 
-### Location
+You can combine `/viewjob/` URLs with search URLs in a single run.
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `workplaceCountries` | Array | Country codes (e.g., `["US", "GB"]`) |
-| `workplaceStates` | Array | State / region names |
-| `workplaceCities` | Array | City names |
-| `latitude` | Number | Primary location latitude |
-| `longitude` | Number | Primary location longitude |
-
-### Compensation & Requirements
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `salaryMin` | Number | Minimum salary (yearly, if disclosed; `0` otherwise) |
-| `salaryMax` | Number | Maximum salary (yearly, if disclosed) |
-| `salaryCurrency` | String | Salary currency code |
-| `salaryFrequency` | String | `Yearly`, `Hourly`, `Monthly`, etc. |
-| `technicalTools` | Array | Required technologies / tools |
-| `minYearsExperience` | Integer | Minimum YoE required (`0` if not specified) |
-| `bachelorsDegreeRequirement` | String | Bachelor's degree requirement level |
-
-### Company
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `companyName` | String | Hiring company name |
-| `companyWebsite` | String | Company homepage URL |
-| `companyIndustries` | Array | Industry tags |
-| `companyEmployees` | String | Employee count bucket (e.g., `"1001-5000"`) |
-| `companyHqCountry` | String | Company HQ country code |
-
-### Metadata
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `scrapedAt` | String | ISO 8601 scrape timestamp |
-
-### Example Output
-
-```
-{
-    "id": "greenhouse___acme___4567890",
-    "objectID": "greenhouse_acme_4567890",
-    "source": "greenhouse",
-    "boardToken": "acme",
-    "applyUrl": "https://boards.greenhouse.io/acme/jobs/4567890",
-    "title": "Senior Software Engineer, Backend",
-    "description": "We are looking for a senior backend engineer to join our Platform team...",
-    "coreJobTitle": "Software Engineer",
-    "category": "Engineering",
-    "seniorityLevel": "Senior Level",
-    "roleType": "Individual Contributor",
-    "commitment": "Full Time",
-    "workplaceType": "Remote",
-    "workplaceCountries": ["US"],
-    "workplaceStates": ["California", "New York"],
-    "workplaceCities": ["San Francisco", "New York"],
-    "latitude": 37.7749,
-    "longitude": -122.4194,
-    "salaryMin": 160000.0,
-    "salaryMax": 220000.0,
-    "salaryCurrency": "USD",
-    "salaryFrequency": "Yearly",
-    "technicalTools": ["Python", "PostgreSQL", "Kubernetes", "Django"],
-    "minYearsExperience": 5,
-    "bachelorsDegreeRequirement": "Required",
-    "companyName": "Acme Corp",
-    "companyWebsite": "https://acme.example.com",
-    "companyIndustries": ["Software", "SaaS"],
-    "companyEmployees": "1001-5000",
-    "companyHqCountry": "US",
-    "isExpired": false,
-    "scrapedAt": "2026-04-11T11:05:00+00:00"
-}
-```
-
-## FAQ
-
-**Q: Why is a RESIDENTIAL proxy required?**
-Hiring.cafe uses Cloudflare Managed Challenge (Turnstile) which blocks all Apify datacenter IPs with `403 Just a moment...`. A real residential IP + a Chrome browser session with a ~10–20 second challenge-solve wait is needed. The proxy is hardcoded and applied automatically — no configuration needed from your side.
-
-**Q: How does the Cloudflare bypass work?**
-The scraper launches a Patchright Chromium browser on a RESIDENTIAL US proxy session, navigates to hiring.cafe, and waits for the Cloudflare managed challenge to self-solve (typically 8–20 seconds). Once `document.title` changes from `"Just a moment..."` to `"HiringCafe - AI Job Search"`, the browser has a valid `cf_clearance` cookie. All API calls are then made via in-browser `fetch()` so the Cloudflare session cookies are reused. If the first attempt doesn't solve within 60 seconds, the scraper rotates the proxy session and tries again (up to 6 attempts).
-
-**Q: How does pagination work?**
-The API returns ~120–160 jobs per page. The scraper walks pages via `&page=N` until `maxItems` is reached or results run out.
-
-**Q: Why are some `salaryMin` / `salaryMax` values zero?**
-Fewer than half of listings disclose salary on hiring.cafe. When not disclosed, both fields are `0.0` (typed default, not `null`).
-
-**Q: Can I search by company?**
-Yes — use `companyNames` (whitelist), `excludedCompanyNames` (blacklist), or `companyKeywords` (substring match). You can also still drop the company name into `searchQueries`, which matches against title, description, AND company name.
-
-**Q: What's the difference between `seniorityLevel` and `minYearsExperience`?**
-`seniorityLevel` is the categorical tag (`Mid Level`, `Senior Level`, etc.) assigned by hiring.cafe's classifier. `minYearsExperience` is the numeric minimum YoE extracted from the job description (may be `0` if not specified).
-
-**Q: Are expired jobs included?**
-No — by default hiring.cafe only returns active listings (`isExpired: false`). The field is preserved in the output for consistency.
-
-**Q: How fresh is the data?**
-`dateFetchedPastNDays` controls freshness. Default is 30 days. Set to `7` for last-week postings, or `1` for last-24-hours monitoring.
-
-## Use Cases
-
-- **Talent intelligence** — monitor hiring velocity for specific roles, companies, or regions
-- **Compensation research** — aggregate salary ranges by role, seniority, and location (where disclosed)
-- **Remote-work trends** — filter by `workplaceTypes: ["Remote"]` to track the remote-first market
-- **ATS market share analysis** — group by `source` to see which ATS platforms are most used
-- **Skills demand tracking** — aggregate `technicalTools` frequencies to spot rising technologies
-- **Job alerts** — daily runs with narrow filters (e.g., `["python developer", "Remote"]`) to monitor new postings
-- **Recruitment pipelines** — bulk-import matching listings into CRMs with all 32 fields ready to use
+For precise location filtering, apply your filters on hiring.cafe first, then paste the URL into Start URLs.
