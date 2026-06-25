@@ -1,151 +1,140 @@
-[Hiring Cafe Scraper](https://apify.com/abotapi/hiring-cafe-scraper?fpr=data)
+[Hiring Cafe Scraper](https://apify.com/manojachari/hiring-cafe-scraper?fpr=data)
 
-# Hiring.Cafe Jobs Scraper
+Scrape thousands of job listings from [hiring.cafe](https://hiring.cafe) in seconds. Get structured data with direct apply links, company names, locations, seniority levels, and engagement metrics — ready for spreadsheets, dashboards, or your own job search tool.
 
-Extract structured job listings from Hiring.Cafe at scale. 100+ fields per job including salary, company funding data, benefits, certifications, and geo coordinates.
+## What is hiring.cafe?
 
-## Why This Scraper?
+[Hiring.cafe](https://hiring.cafe) is a job aggregation platform that indexes millions of job listings from thousands of companies. It pulls from major job boards like Greenhouse, Lever, Workable, Workday, BambooHR, and company career pages — giving you a single source to search across all of them.
 
-**Fast.** Each API call returns ~150 jobs. Scrape 500 jobs in under 30 seconds, 1,000 jobs in under a minute (after initial Cloudflare solve). Results are pushed incrementally so you can start processing before the run finishes.
+## What does this Actor do?
 
-**More Filters.** Employment type, seniority level, salary transparency, and date range filters that no other Hiring.Cafe scraper on Apify offers.
+This Actor searches hiring.cafe using its internal API and returns clean, structured job data. It handles Cloudflare protection automatically using an anti-detect browser, so you get reliable results every time.
 
-**Direct Job URLs.** Paste `/viewjob/` links alongside search URLs to scrape individual listings with full data.
+**How it works:**
 
-**Total Count.** Shows how many jobs match your search before scraping begins.
+1. Launches a stealth browser to establish a session with hiring.cafe
+2. Bypasses Cloudflare Turnstile challenge automatically
+3. Queries the hiring.cafe search API with your filters
+4. Returns structured JSON data for each job listing
 
-## How It Works
+## Features
 
-### Option 1: Search by URL
+- **Keyword search** — Search for any job title, skill, or keyword
+- **Location filtering** — Filter by country: United States, United Kingdom, Canada, Germany, India
+- **Workplace type** — Remote, Hybrid, or Onsite
+- **Seniority level** — No Prior Experience, Entry Level, Mid Level, Senior Level
+- **Commitment type** — Full Time, Part Time, Contract, Internship, Temporary, Seasonal, Volunteer
+- **Industry filtering** — 34 industries including AI & Machine Learning, Fintech, SaaS, Healthcare, Cybersecurity, and more
+- **Company filtering** — Include or exclude specific companies by name
+- **Date filtering** — Only get jobs posted within the last N days (1–365)
+- **Engagement metrics** — See how many people viewed, applied to, and saved each listing
+- **Budget control** — Automatically stops when your max charge limit is reached
 
-Paste one or more search URLs from hiring.cafe. Go to [hiring.cafe](https://hiring.cafe), apply your filters, then copy the URL from the address bar.
+## Output
 
-You can also paste direct job URLs (`/viewjob/...`) to scrape individual listings.
+Each job listing includes:
 
-### Option 2: Search by Filters
-
-Use keyword, location, and advanced filters without building URLs.
-
-```
-{
-  "keyword": "python developer",
-  "location": "United States",
-  "workplaceType": "Remote",
-  "commitmentType": "Full Time",
-  "seniorityLevel": "Senior Level",
-  "salaryTransparentOnly": true,
-  "maxItems": 500
-}
-```
-
-## Filter Options
-
-| Filter | Options | Default | Competitors |
-| --- | --- | --- | --- |
-| Keyword | Any text | (empty) | All have |
-| Location | Country or city | (worldwide) | All have |
-| Workplace Type | Remote, Hybrid, Onsite, Any | Any | All have |
-| **Employment Type** | Full Time, Part Time, Contract, Internship, Any | Any | **Only us** |
-| **Seniority Level** | Entry, Mid, Senior, No Experience, Any | Any | **Only us** |
-| **Posted Within** | 1 to 365 days | 30 | **Only us** |
-| **Salary Transparent** | true or false | false | **Only us** |
-
-> **Note:** Hiring.Cafe uses relevance based search. Keyword and employment type are hard filters. Workplace type and seniority level influence ranking but are soft filters. For precise filtering, use URL mode with a hiring.cafe URL where you applied filters directly on the website.
-
-## Output Structure (100+ fields)
-
-Output preserves the native Hiring.Cafe nested format, fully compatible with other Hiring.Cafe scrapers on Apify.
-
-### Top Level Fields
-
-`id`, `board_token`, `source`, `apply_url`, `job_url`, `requisition_id`, `is_expired`
-
-### Job Info
-
-`title`, `job_title_raw`, `description` (full HTML)
-
-### Job Details (91 fields)
-
-| Category | Sample Fields |
-| --- | --- |
-| Title and Summary | core_job_title, requirements_summary, job_category |
-| Skills | technical_tools[], licenses_or_certifications[] |
-| Education | bachelors, masters, doctorate degree requirement, fields_of_study[] |
-| Experience | min_industry_and_role_yoe, min_management_and_leadership_yoe |
-| Employment | commitment[], role_type, seniority_level, workplace_type |
-| Location | formatted_workplace_location, workplace_cities, states, countries[] |
-| Compensation | yearly, monthly, weekly, hourly min and max compensation, currency |
-| Benefits | visa_sponsorship, 401k_matching, four_day_work_week, retirement_plan |
-| Work Conditions | physical_labor_intensity, travel_requirement, shift_work |
-| Languages | language_requirements[], num_language_requirements |
-
-### v5_processed_company_data (19 fields)
-
-`name`, `homepage_uri`, `industries[]`, `nb_employees`, `year_founded`, `hq_country`, `organization_type`, `latest_funding_type`, `latest_funding_amount`, `investors[]`, `stock_exchange`, `stock_symbol`
-
-### Geoloc
-
-`lat`, `lon`
-
-## Example Output
-
-```
-{
-  "id": "lever___example___12345",
-  "source": "lever",
-  "board_token": "example",
-  "apply_url": "https://jobs.lever.co/example/12345",
-  "job_url": "https://hiring.cafe/viewjob/abc123xyz",
-  "is_expired": false,
-  "job_information": {
-    "title": "Backend Engineer",
-    "description": "<p>Job description HTML content...</p>"
-  },
-  "v5_processed_job_data": {
-    "core_job_title": "Backend Engineer",
-    "commitment": ["Full Time"],
-    "seniority_level": "Mid Level",
-    "workplace_type": "Remote",
-    "formatted_workplace_location": "New York, New York, United States",
-    "yearly_min_compensation": 120000,
-    "yearly_max_compensation": 160000,
-    "listed_compensation_currency": "USD",
-    "is_compensation_transparent": true,
-    "technical_tools": ["Node.js", "PostgreSQL", "AWS"],
-    "visa_sponsorship": false,
-    "company_name": "Example Inc"
-  },
-  "v5_processed_company_data": {
-    "name": "Example Inc",
-    "nb_employees": 200,
-    "year_founded": 2018,
-    "hq_country": "US",
-    "organization_type": "Private",
-    "latest_funding_type": "Series A",
-    "latest_funding_amount": 15000000
-  },
-  "_geoloc": [{"lat": 40.7128, "lon": -74.006}]
-}
-```
-
-## Input Options
-
-| Field | Description | Default |
+| Field | Type | Description |
 | --- | --- | --- |
-| Start URLs | Search URLs or job URLs from hiring.cafe |  |
-| Keyword | Job title, skills, or company name |  |
-| Location | Country or city | (worldwide) |
-| Workplace Type | Remote, Hybrid, Onsite, Any | Any |
-| Employment Type | Full Time, Part Time, Contract, Internship, Any | Any |
-| Seniority Level | Entry, Mid, Senior, Any | Any |
-| Posted Within | Days since posted (1 to 365) | 30 |
-| Salary Transparent | Only jobs with disclosed salary | false |
-| Max Jobs | Maximum listings to scrape | 1000 |
+| `id` | string | Unique job listing ID |
+| `title` | string | Job title |
+| `source` | string | Company name |
+| `apply_url` | string | Direct link to apply |
+| `board_token` | string | Job board identifier |
+| `description` | string | Full job description (HTML cleaned) |
+| `location` | string | City, state/region, country |
+| `workplace_type` | string | Remote, Hybrid, or Onsite |
+| `seniority` | string | Experience level required |
+| `commitment_type` | string | Full Time, Part Time, Contract, etc. |
+| `posted_at` | string | ISO 8601 timestamp of when the job was posted |
+| `industry` | string | Industry or job category |
+| `viewed_count` | number | Number of views on hiring.cafe |
+| `applied_count` | number | Number of applications via hiring.cafe |
+| `saved_count` | number | Number of saves on hiring.cafe |
 
-## Tips
+## Example use cases
 
-The total count shows before scraping so you know the search size upfront.
+- **Job seekers** — Build a personal job tracker with fresh listings updated daily
+- **Recruiters** — Monitor competitor hiring patterns across industries
+- **Market researchers** — Analyze hiring trends by role, location, or industry
+- **HR teams** — Benchmark job titles, seniority levels, and commitment types in your market
+- **Data analysts** — Feed structured job data into dashboards or ML pipelines
 
-You can combine `/viewjob/` URLs with search URLs in a single run.
+## Input examples
 
-For precise location filtering, apply your filters on hiring.cafe first, then paste the URL into Start URLs.
+### Find remote product manager jobs posted this week
+
+```
+{
+    "searchQuery": "product manager",
+    "workplaceTypes": ["Remote"],
+    "seniorityLevels": ["Mid Level", "Senior Level"],
+    "commitmentTypes": ["Full Time"],
+    "dateFetchedPastNDays": 7,
+    "maxResults": 100
+}
+```
+
+### Find entry-level AI jobs in the US
+
+```
+{
+    "searchQuery": "machine learning engineer",
+    "location": "United States",
+    "workplaceTypes": ["Remote", "Hybrid"],
+    "seniorityLevels": ["Entry Level", "No Prior Experience Required"],
+    "industries": ["AI & Machine Learning"],
+    "dateFetchedPastNDays": 30
+}
+```
+
+### Monitor a specific company's hiring
+
+```
+{
+    "searchQuery": "",
+    "companyNames": ["Google", "Meta", "Apple"],
+    "location": "United States",
+    "dateFetchedPastNDays": 7
+}
+```
+
+## Proxy configuration
+
+This Actor requires a real browser to bypass Cloudflare protection. **Residential proxies are required** for reliable results on Apify cloud.
+
+In the proxy settings, enable:
+
+- **Use Apify Proxy**: Yes
+- **Proxy groups**: `RESIDENTIAL`
+
+Without residential proxies, Cloudflare will block the requests.
+
+## Pricing
+
+This Actor uses pay-per-result pricing:
+
+| Component | Cost |
+| --- | --- |
+| Start fee | $0.01 per run |
+| Per result | $0.003 per job listing |
+
+**Examples:**
+
+- 100 jobs = **$0.31**
+- 500 jobs = **$1.51**
+- 1,000 jobs = **$3.01**
+- 5,000 jobs = **$15.01**
+
+Set a **max charge limit** on your run and the Actor will automatically stop before exceeding it.
+
+## Limitations
+
+- **Location presets** — Currently supports 5 country-level locations (US, UK, Canada, Germany, India). City-level filtering is not yet supported.
+- **Cloudflare dependency** — The Actor needs to pass Cloudflare's challenge on each run, which adds ~10–20 seconds of startup time.
+- **Data freshness** — Results come directly from hiring.cafe's index. Some listings may be stale if the original job board hasn't been re-crawled recently.
+- **Residential proxies required** — Datacenter proxies will be blocked by Cloudflare. Residential proxy usage incurs additional Apify platform costs.
+
+## Changelog
+
+- **1.0** — Initial release with keyword search, location/workplace/seniority/commitment/industry filters, engagement metrics, and Cloudflare bypass via Camoufox.
